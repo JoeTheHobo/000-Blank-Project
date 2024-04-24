@@ -1,3 +1,4 @@
+
 /*
     ----------------Simple----------------
           Use JavaScript but simply.
@@ -200,6 +201,14 @@ function getType(ele,detailed = false) {
         }
         if (returnObj.type == "array" || returnObj.type == "string") {
             returnObj.length = ele.length;
+        }
+        if (returnObj.type == "string") {
+            returnObj.isNumber = !isNaN(ele);
+
+            if (ele.length == 1 && "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".includes(ele)) {
+                returnObj.isUpperCase = ele.toUpperCase() == ele;
+                returnObj.isLowerCase = ele.toLowerCase() == ele;
+            }
         }
 
         if (isClass(ele)) returnObj.type = "class";
@@ -1355,6 +1364,269 @@ Object.defineProperty(Array.prototype, 'type', {
     }
 });
 
+/*
+    c Documentation
 
-sloglibrary(15.3,'Simple','JoeTheHobo');
+*/
+
+
+function c(selector,css) {
+    if (!$(".javaScriptStyleTags")) $("<head").create("<style .javaScriptStyleTags");
+
+    //Get Selector String
+    let selectorString = _css_generateSelectorString(selector);
+
+    //IF Css Is Provided Then Chagne Attributes
+    if (css) {
+        //Get Attributes String
+        let attributes = _css_generateAttributesString(css);
+        //Write CSS
+        $(".javaScriptStyleTags").innerHTML += `
+        ${selectorString} {
+            ${attributes}}`
+    }
+    
+    let obj = {
+        selectorString: selectorString,
+        css: css,
+        placeholder: function(css) {
+            //Get Attributes String
+            let attributes = _css_generateAttributesString(css)
+    
+            $(".javaScriptStyleTags").innerHTML += `${this.selectorString}::placeholder {
+                ${attributes}}`
+            
+            return this;
+        },
+        hover: function(css,time) {
+            //Get Attributes String
+            let attributes = _css_generateAttributesString(css)
+
+            if (!time) {
+                $(".javaScriptStyleTags").innerHTML += `${this.selectorString}:hover {
+                    ${attributes}}`
+            } else {
+                let animationName = _css_makeAnimation(this.css,css,time);
+                //Set Hover To Animation
+                $(".javaScriptStyleTags").innerHTML += `
+                    ${this.selectorString}:hover {
+                        animation: ${animationName} ${time/1000}s 1;
+                    }
+                `
+            }
+            
+            return this;
+        },
+        hoverC: function(selector,css,time) {
+            let className = rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter");
+            //Also Create a Class To Play Said Animation
+            $(".javaScriptStyleTags").innerHTML += `
+                .${className + "Class"} {
+                    ${_css_generateAttributesString(css)}
+                }
+            `
+            let searchingFor = selectorString;
+            
+            document.on("mousemove",function(e) {
+                if (_css_onTestIfAccurrate(e.target,searchingFor)) {
+                    selector.classAdd(className + "Class")
+                } else {
+                    selector.classRemove(className + "Class")
+
+                }
+            })
+
+            return this;
+        },
+        toggle: function(type,css) {
+            let searchingFor  = selectorString;
+            let css2 = this.css;
+            document.on(type,function(e) {
+                if (_css_onTestIfAccurrate(e.target,searchingFor)) {
+                    if (e.target.c_toggled == false || e.target.c_toggled == undefined) {
+                        e.target.c_toggled = true;
+                        e.target.css(css)
+                    } else {
+                        e.target.c_toggled = false;
+                        e.target.css(css2)
+                    }
+                }
+            })
+
+            return this;
+        },
+        on: function(type,css,time) {
+            if (!time) {
+                let searchingFor  = selectorString;
+                document.on(type,function(e) {
+                    if (_css_onTestIfAccurrate(e.target,searchingFor)) {
+                        e.target.css(css)
+                    }
+                })
+            } else {
+                let animationName = _css_makeAnimation(this.css,css,time);
+
+                let searchingFor = selectorString;
+                document.on(type,function(e) {
+                    if (_css_onTestIfAccurrate(e.target,searchingFor)) {
+                        e.target.classAdd(animationName + "Class");
+                        let target = e.target;
+                        setTimeout(function() {
+                            target.classRemove(animationName + "Class")
+                        },time)
+                    }
+                })
+            }
+
+            
+            return this;
+        },
+    }
+
+    return obj;
+}
+function _css_makeAnimation(oldCSS,newCSS,time) {
+    let animationName = rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter");
+    
+    let activeTime,transitionTime = 0,totalTime,longPercent,shortPercent;
+    totalTime = time;
+
+    if (oldCSS) {
+        repeat(Object.keys(oldCSS),(key,i) => {
+            if (key == "transition") {
+                let values = Object.values(oldCSS)[i].split(" ");
+                if (values[0] !== "all") return false;
+
+                transitionTime = Number(values[1].substring(0,values[1].length-1))*1000;
+                
+                return false;
+            }
+        })
+    }
+
+    activeTime = totalTime - (transitionTime*2);
+
+    longPercent = (activeTime*100)/totalTime;
+    shortPercent = (transitionTime*100)/totalTime;
+
+    let time1=0,time2=shortPercent,time3=100-shortPercent,time4=100;
+
+    let useAttributes = {};
+    repeat(Object.keys(newCSS),(key,i) => {
+        eval("useAttributes." + key + " = '" + Object.values(newCSS)[i] + "'");
+    })
+    attributes = _css_generateAttributesString(useAttributes)
+
+    //Create An Animation
+    $(".javaScriptStyleTags").innerHTML += `
+        @keyframes ${animationName} {
+            ${time1}% {}
+            ${time2}% {${attributes}}
+            ${time3}% {${attributes}}
+            ${time4}% {}
+        }
+    `
+    //Also Create a Class To Play Said Animation
+    $(".javaScriptStyleTags").innerHTML += `
+        .${animationName + "Class"} {
+            animation: ${animationName} ${time/1000}s 1;
+        }
+    `
+
+    return animationName;
+}
+function _css_onTestIfAccurrate(target,searching) {
+    let isAccurate = false;
+
+    if (searching.charAt(0) == "#") {
+        if (target.id == searching.substring(1,searching.length)) isAccurate = true;
+    }
+    if (searching.charAt(0) == ".") {
+        if (target.className == searching.substring(1,searching.length)) isAccurate = true;
+    }
+    if (!"#.".includes(searching.charAt(0))) {
+        if (getType(target,true).constructor.name.toLowerCase().includes(searching)) isAccurate = true;
+
+        if (getType(target,true).constructor.name.toLowerCase() == "htmlhtmlelement" && searching == "body") isAccurate = true;
+    }
+
+
+    return isAccurate;
+}
+function _css_generateSelectorString(string) {
+    let newList = [];
+    let kids = string.split(",");
+    repeat(kids,(str,i) => {
+        if (str.includes("![")) {
+            let substring = "";
+            let text = "";
+            let isText = false;
+            repeat(str,(char,i) => {
+                if (char == "!") {
+                    return true;   
+                }
+                if (char == "[") {
+                    isText = true;
+                    return true;
+                }
+                if (char == "]" && isText) {
+                    return false;
+                }
+                if (isText)
+                    text += char;
+                else
+                    substring += char;
+            })
+            if (getType(text,true).isNumber === true) {
+                str = substring + ":nth-child(" + (Number(text) + 1) + ")";
+            } else {
+                if (text == "firstchild") text = "first-child";
+                if (text == "first child") text = "first-child";
+                if (text == "lastchild") text = "last-child";
+                if (text == "last child") text = "last-child";
+                str = substring + ":" + text;
+            }
+
+        }
+
+        newList.push(str)
+    })
+    return newList.join(",");
+}
+function _css_generateAttributesString(obj) {
+    let attribute = '';
+    repeat(Object.keys(obj),(key,i) => {
+        let value = Object.values(obj)[i];
+
+        if (key == "scan_boxShadow") {
+            key = "box-shadow";
+            value += "";
+            let valueSplit = value.split(" ");
+            value = scan_boxShadow_list[Number(valueSplit[0])];
+
+        }
+        let correctKey = "";
+        repeat(key,(char,i) => {
+            if (getType(char,true).isUpperCase) {
+                correctKey += "-" + char.toLowerCase();
+            } else
+                correctKey += char;
+        })
+        key = correctKey;
+
+        attribute += `${key}: ${value};
+        `
+    })
+
+    return attribute;
+}
+
+
+// /https://getcssscan.com/css-box-shadow-examples
+let scan_boxShadow_list = ["rgba(149, 157, 165, 0.2) 0px 8px 24px","rgba(100, 100, 111, 0.2) 0px 7px 29px 0px","rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px","rgba(0, 0, 0, 0.35) 0px 5px 15px","rgba(0, 0, 0, 0.16) 0px 1px 4px","rgba(0, 0, 0, 0.24) 0px 3px 8px","rgba(99, 99, 99, 0.2) 0px 2px 8px 0px","rgba(0, 0, 0, 0.16) 0px 1px 4px, rgb(51, 51, 51) 0px 0px 0px 3px","rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px","rgba(0, 0, 0, 0.1) 0px 4px 12px","rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px","rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px","rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px","rgba(17, 12, 46, 0.15) 0px 48px 100px 0px","rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset","rgba(255, 255, 255, 0.1) 0px 1px 1px 0px inset, rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px","rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px","rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px","rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px","rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px","rgb(38, 57, 77) 0px 20px 30px -10px","rgba(6, 24, 44, 0.4) 0px 0px 0px 2px, rgba(6, 24, 44, 0.65) 0px 4px 6px -1px, rgba(255, 255, 255, 0.08) 0px 1px 0px inset","rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px","rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px","rgba(50, 50, 93, 0.25) 0px 30px 60px -12px, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px","rgba(50, 50, 93, 0.25) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset","rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px","rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px","rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px","rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px","rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px","rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px","rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px","rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px","rgba(0, 0, 0, 0.05) 0px 0px 0px 1px","rgba(0, 0, 0, 0.05) 0px 1px 2px 0px","rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.06) 0px 1px 2px 0px","rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.06) 0px 2px 4px -1px","rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.05) 0px 4px 6px -2px","rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.04) 0px 10px 10px -5px","rgba(0, 0, 0, 0.25) 0px 25px 50px -12px","rgba(0, 0, 0, 0.06) 0px 2px 4px 0px inset","rgba(0, 0, 0, 0.1) 0px 0px 5px 0px, rgba(0, 0, 0, 0.1) 0px 0px 1px 0px","rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px, rgba(0, 0, 0, 0.07) 0px 16px 32px, rgba(0, 0, 0, 0.07) 0px 32px 64px","rgba(0, 0, 0, 0.09) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px","rgba(0, 0, 0, 0.2) 0px 18px 50px -10px","rgba(0, 0, 0, 0.1) 0px 10px 50px","rgba(0, 0, 0, 0.04) 0px 3px 5px","rgba(240, 46, 170, 0.4) -5px 5px, rgba(240, 46, 170, 0.3) -10px 10px, rgba(240, 46, 170, 0.2) -15px 15px, rgba(240, 46, 170, 0.1) -20px 20px, rgba(240, 46, 170, 0.05) -25px 25px","rgba(240, 46, 170, 0.4) 0px 5px, rgba(240, 46, 170, 0.3) 0px 10px, rgba(240, 46, 170, 0.2) 0px 15px, rgba(240, 46, 170, 0.1) 0px 20px, rgba(240, 46, 170, 0.05) 0px 25px","rgba(240, 46, 170, 0.4) 5px 5px, rgba(240, 46, 170, 0.3) 10px 10px, rgba(240, 46, 170, 0.2) 15px 15px, rgba(240, 46, 170, 0.1) 20px 20px, rgba(240, 46, 170, 0.05) 25px 25px","rgba(0, 0, 0, 0.07) 0px 1px 1px, rgba(0, 0, 0, 0.07) 0px 2px 2px, rgba(0, 0, 0, 0.07) 0px 4px 4px, rgba(0, 0, 0, 0.07) 0px 8px 8px, rgba(0, 0, 0, 0.07) 0px 16px 16px","rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em","rgba(0, 0, 0, 0.1) 0px 1px 2px 0px","rgba(27, 31, 35, 0.04) 0px 1px 0px, rgba(255, 255, 255, 0.25) 0px 1px 0px inset","rgba(3, 102, 214, 0.3) 0px 0px 0px 3px","rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px","rgba(0, 0, 0, 0.2) 0px 12px 28px 0px, rgba(0, 0, 0, 0.1) 0px 2px 4px 0px, rgba(255, 255, 255, 0.05) 0px 0px 0px 1px inset","rgba(0, 0, 0, 0.15) 0px 5px 15px 0px","rgba(33, 35, 38, 0.1) 0px 10px 10px -10px","blue 0px 0px 0px 2px inset, rgb(255, 255, 255) 10px -10px 0px -3px, rgb(31, 193, 27) 10px -10px, rgb(255, 255, 255) 20px -20px 0px -3px, rgb(255, 217, 19) 20px -20px, rgb(255, 255, 255) 30px -30px 0px -3px, rgb(255, 156, 85) 30px -30px, rgb(255, 255, 255) 40px -40px 0px -3px, rgb(255, 85, 85) 40px -40px","rgb(85, 91, 255) 0px 0px 0px 3px, rgb(31, 193, 27) 0px 0px 0px 6px, rgb(255, 217, 19) 0px 0px 0px 9px, rgb(255, 156, 85) 0px 0px 0px 12px, rgb(255, 85, 85) 0px 0px 0px 15px","rgb(204, 219, 232) 3px 3px 6px 0px inset, rgba(255, 255, 255, 0.5) -3px -3px 6px 1px inset","rgba(136, 165, 191, 0.48) 6px 2px 16px 0px, rgba(255, 255, 255, 0.8) -6px -2px 16px 0px","rgba(17, 17, 26, 0.1) 0px 1px 0px","rgba(17, 17, 26, 0.05) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 0px 8px","rgba(17, 17, 26, 0.1) 0px 0px 16px","rgba(17, 17, 26, 0.05) 0px 4px 16px, rgba(17, 17, 26, 0.05) 0px 8px 32px","rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.05) 0px 8px 32px","rgba(17, 17, 26, 0.1) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 48px","rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px","rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px, rgba(17, 17, 26, 0.1) 0px 24px 80px","rgba(50, 50, 105, 0.15) 0px 2px 5px 0px, rgba(0, 0, 0, 0.05) 0px 1px 1px 0px","rgba(0, 0, 0, 0.15) 0px 15px 25px, rgba(0, 0, 0, 0.05) 0px 5px 10px","rgba(0, 0, 0, 0.15) 2.4px 2.4px 3.2px","rgba(0, 0, 0, 0.15) 0px 3px 3px 0px","rgba(0, 0, 0, 0.08) 0px 4px 12px","rgba(0, 0, 0, 0.15) 0px 2px 8px","rgba(0, 0, 0, 0.18) 0px 2px 4px","rgba(0, 0, 0, 0.1) -4px 9px 25px -6px","rgba(0, 0, 0, 0.2) 0px 60px 40px -7px","rgba(0, 0, 0, 0.4) 0px 30px 90px","rgba(0, 0, 0, 0.56) 0px 22px 70px 4px","rgba(0, 0, 0, 0.2) 0px 20px 30px","rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.9) 0px 0px 0px 1px","rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em, rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em, rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset","rgba(0, 0, 0, 0.09) 0px 3px 12px","rgba(0, 0, 0, 0.17) 0px -23px 25px 0px inset, rgba(0, 0, 0, 0.15) 0px -36px 30px 0px inset, rgba(0, 0, 0, 0.1) 0px -79px 40px 0px inset, rgba(0, 0, 0, 0.06) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px","rgba(0, 0, 0, 0.45) 0px 25px 20px -20px","rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset","rgba(0, 0, 0, 0.05) 0px 0px 0px 1px, rgb(209, 213, 219) 0px 0px 0px 1px inset","rgba(0, 0, 0, 0.35) 0px -50px 36px -28px inset","rgba(9, 30, 66, 0.25) 0px 1px 1px, rgba(9, 30, 66, 0.13) 0px 0px 1px 1px","rgba(9, 30, 66, 0.25) 0px 4px 8px -2px, rgba(9, 30, 66, 0.08) 0px 0px 0px 1px"];
+
+includesString += ', C V1';
+
+
+sloglibrary(15.4,'Simple','JoeTheHobo');
 slogIncludes(includesString)
