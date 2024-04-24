@@ -1459,8 +1459,11 @@ function c(selector,css) {
             if (!time) {
                 let searchingFor  = selectorString;
                 document.on(type,function(e) {
+                    let target = e.target;
+                    if (_css_onTestIfAccurrate(e.target,searchingFor) == "body") target = $("<body")
+
                     if (_css_onTestIfAccurrate(e.target,searchingFor)) {
-                        e.target.css(css)
+                        target.css(css)
                     }
                 })
             } else {
@@ -1469,8 +1472,10 @@ function c(selector,css) {
                 let searchingFor = selectorString;
                 document.on(type,function(e) {
                     if (_css_onTestIfAccurrate(e.target,searchingFor)) {
-                        e.target.classAdd(animationName + "Class");
                         let target = e.target;
+                        if (_css_onTestIfAccurrate(e.target,searchingFor) == "body") target = $("<body")
+
+                        target.classAdd(animationName + "Class");
                         setTimeout(function() {
                             target.classRemove(animationName + "Class")
                         },time)
@@ -1547,7 +1552,7 @@ function _css_onTestIfAccurrate(target,searching) {
     if (!"#.".includes(searching.charAt(0))) {
         if (getType(target,true).constructor.name.toLowerCase().includes(searching)) isAccurate = true;
 
-        if (getType(target,true).constructor.name.toLowerCase() == "htmlhtmlelement" && searching == "body") isAccurate = true;
+        if (getType(target,true).constructor.name.toLowerCase() == "htmlhtmlelement" && searching == "body") isAccurate = "body";
     }
 
 

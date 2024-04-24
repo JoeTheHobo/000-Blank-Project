@@ -2,6 +2,12 @@ c("body",{
     background: "#efefef",
     transition: "all .2s ease-in-out",
 })
+.on("mousedown",{
+    background: "black",
+})
+.on("mouseup",{
+    background: "#efefef",
+})
 
 
 c("div",{
@@ -23,6 +29,6 @@ c("div",{
     scan_boxShadow: 50,
 })
 .hoverC($("<body"),{
-    background: "black",
+    background: "black !important",
 })
 
