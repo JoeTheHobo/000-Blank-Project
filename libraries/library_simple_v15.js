@@ -1,4 +1,3 @@
-
 /*
     ----------------Simple----------------
           Use JavaScript but simply.
@@ -121,7 +120,7 @@ Array.prototype.each = function(type,response) {
         if (whatToPerform == 'placeholder') this[i].placeholder = response;
         if (whatToPerform == 'src') this[i].src = response;
         if (whatToPerform == 'id') this[i].id = response;
-        if (whatToPerform == 'class') this[i].class = response;
+        if (whatToPerform == 'class') this[i].className = response;
         if (whatToPerform == 'value') this[i].value = response;
         if (whatToPerform == 'classAdd') this[i].classList.add(response)
         if (whatToPerform == 'classRemove') this[i].classList.remove(response)
@@ -1364,12 +1363,62 @@ Object.defineProperty(Array.prototype, 'type', {
     }
 });
 
+//Lorem
+let lorem_elements = $("<lorem");
+if (!lorem_elements.length) lorem_elements = [lorem_elements];
+for (let i = 0; i < lorem_elements.length; i++) {
+    let wordCount = 50;
+    let paragraphs = 1;
+    if (lorem_elements[i].id) {
+        let idSplit = lorem_elements[i].id.split(",")
+        wordCount = Number(idSplit[0]);
+        if (idSplit[1]) paragraphs = Number(idSplit[1]);
+    }
+
+    
+    lorem_elements[i].innerHTML = lorem(Number(wordCount),Number(paragraphs));
+}
+
+
+
+function lorem(words,paragraphs=1) {
+    let text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Id nibh tortor id aliquet lectus proin. Urna nunc id cursus metus aliquam. Vitae justo eget magna fermentum iaculis eu non. Phasellus faucibus scelerisque eleifend donec. Accumsan tortor posuere ac ut consequat semper viverra. Est pellentesque elit ullamcorper dignissim cras tincidunt lobortis feugiat vivamus. Consectetur a erat nam at lectus urna duis. In iaculis nunc sed augue. Purus sit amet luctus venenatis lectus magna fringilla urna porttitor. Mi eget mauris pharetra et ultrices neque. Id interdum velit laoreet id donec ultrices tincidunt arcu. Pharetra sit amet aliquam id diam. Ac turpis egestas maecenas pharetra convallis posuere morbi. Convallis posuere morbi leo urna molestie at elementum eu.'
+    let textSplit = text.split(" ");
+    let returnText = "";
+    let count = 0;
+    let whenToSplitCount = 0;
+    let WhenToSplit = Math.round(words/paragraphs);
+    let capitalize = false;
+
+    repeat(words,(i) => {
+        let word = textSplit[count];
+        if (capitalize) {
+            word = word.charAt(0).toUpperCase() + word.substring(1,word.length);
+            capitalize = false;
+
+            if (word.charAt(word.length-1) == ".") word = word.substring(0,word.length-1)
+        }
+        returnText += word + " ";
+
+        if (whenToSplitCount == WhenToSplit && paragraphs !== 1) {
+            returnText = returnText.substring(0,returnText.length-1) + '.<br><br>'
+            whenToSplitCount = 0;
+            capitalize = true;
+        }
+
+        count++;
+        whenToSplitCount++;
+        if (count > textSplit.length) count = 0;
+    })
+    return returnText;
+}
+
 /*
     c Documentation
 
 */
 
-
+let c_listOfSensors = [];
 function c(selector,css) {
     if (!$(".javaScriptStyleTags")) $("<head").create("<style .javaScriptStyleTags");
 
@@ -1389,6 +1438,15 @@ function c(selector,css) {
     let obj = {
         selectorString: selectorString,
         css: css,
+        selection: function(css) {
+            //Get Attributes String
+            let attributes = _css_generateAttributesString(css)
+    
+            $(".javaScriptStyleTags").innerHTML += `${this.selectorString}::selection {
+                ${attributes}}`
+            
+            return this;
+        },
         placeholder: function(css) {
             //Get Attributes String
             let attributes = _css_generateAttributesString(css)
@@ -1429,9 +1487,9 @@ function c(selector,css) {
             
             document.on("mousemove",function(e) {
                 if (_css_onTestIfAccurrate(e.target,searchingFor)) {
-                    selector.classAdd(className + "Class")
+                    $(selector).classAdd(className + "Class")
                 } else {
-                    selector.classRemove(className + "Class")
+                    $(selector).classRemove(className + "Class")
 
                 }
             })
@@ -1458,13 +1516,22 @@ function c(selector,css) {
         on: function(type,css,time) {
             if (!time) {
                 let searchingFor  = selectorString;
-                document.on(type,function(e) {
-                    let target = e.target;
-                    if (_css_onTestIfAccurrate(e.target,searchingFor) == "body") target = $("<body")
 
-                    if (_css_onTestIfAccurrate(e.target,searchingFor)) {
-                        target.css(css)
-                    }
+                searchingFor = "#.".includes(searchingFor.charAt(0)) ? searchingFor : "<" + searchingFor;
+                let elements = $(searchingFor);
+                if (!elements.length) elements = [elements];
+                for (let i = 0; i < elements.length; i++) {
+                    let effect = elements[i];
+                    if (elements[i] == $("<body")) elements[i] = document;
+
+                    elements[i].on(type,function(e) {
+                        effect.css(css)
+                    })
+                }
+                c_listOfSensors.push({
+                    css: css,
+                    type: type,
+                    selector: selectorString,
                 })
             } else {
                 let animationName = _css_makeAnimation(this.css,css,time);
@@ -1486,9 +1553,89 @@ function c(selector,css) {
             
             return this;
         },
+        onC: function(type,selector,css) {
+
+            let searchingFor = this.selectorString;
+            searchingFor = "#.".includes(searchingFor.charAt(0)) ? searchingFor : "<" + searchingFor;
+            let elements = $(searchingFor);
+            if (!elements.length) elements = [elements];
+            
+            for (let i = 0; i < elements.length; i++) { 
+                if (!elements[i]._css_OnOthers) elements[i]._css_OnOthers = [];
+                elements[i]._css_OnOthers.push({
+                    whoDoIEffect: selector,
+                    css: css,
+                    type: type,
+                });
+                elements[i].on(type,function(e) {
+                    for (let i = 0; i < this._css_OnOthers.length; i++) {
+                        if (this._css_OnOthers[i].type == type) {
+                            let thisEvent = this._css_OnOthers[i];
+                            let target = $(thisEvent.whoDoIEffect);
+                            target.each(thisEvent.css)
+                        }
+                    }
+                })
+            }
+
+            c_listOfSensors.push({
+                css: css,
+                type: type,
+                selector: selectorString,
+                whoDoIEffect: selector,
+            })
+
+            
+            return this;
+        },
     }
 
     return obj;
+}
+function _css_testNewElements(elementTag,element) {
+    for (let i = 0; i < c_listOfSensors.length; i++) {
+
+        let searchingFor = c_listOfSensors[i].selector;
+        let passed = false;
+        switch (searchingFor.charAt(0)) {
+            case "#":
+                if (element.id == searchingFor.substring(1,searchingFor.length)) passed = true;
+                break;
+            case ".":
+                if (element.classList.contains(searchingFor.substring(1,searchingFor.length))) passed = true;
+                break;
+            default:
+                if (elementTag.toLowerCase() == searchingFor.toLowerCase()) passed = true;
+                break;
+        }
+
+        if (passed) {
+            if (c_listOfSensors[i].whoDoIEffect) {
+
+                if (!element._css_OnOthers) element._css_OnOthers = [];
+                element._css_OnOthers.push({
+                    whoDoIEffect: c_listOfSensors[i].whoDoIEffect,
+                    css: c_listOfSensors[i].css,
+                    type: c_listOfSensors[i].type,
+                });
+
+                element.on(c_listOfSensors[i].type,function(e) {
+                    for (let i = 0; i < this._css_OnOthers.length; i++) {
+                        if (this._css_OnOthers[i].type == c_listOfSensors[i].type) {
+                            let thisEvent = this._css_OnOthers[i];
+                            let target = $(thisEvent.whoDoIEffect);
+                            target.each(thisEvent.css)
+                        }
+                    }
+                })
+            } else {
+                element.on(c_listOfSensors[i].type,function(e) {
+                    element.css(c_listOfSensors[i].css)
+                })
+
+            }
+        }
+    }
 }
 function _css_makeAnimation(oldCSS,newCSS,time) {
     let animationName = rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter") + rnd("Letter");
@@ -1602,14 +1749,46 @@ function _css_generateAttributesString(obj) {
     let attribute = '';
     repeat(Object.keys(obj),(key,i) => {
         let value = Object.values(obj)[i];
+        let shouldIskipAddingValue = false;
 
         if (key == "scan_boxShadow") {
             key = "box-shadow";
             value += "";
             let valueSplit = value.split(" ");
             value = scan_boxShadow_list[Number(valueSplit[0])];
-
         }
+        checkingPaddingAndMargin: if (key.includes("padding") || key.includes("margin")) {
+            let firstString;
+            let stringCount;
+            if (key.includes("padding")) firstString = "padding";
+            if (key.includes("margin")) firstString = "margin";
+            stringCount = firstString.length;
+            if (key.length <= stringCount) break checkingPaddingAndMargin;
+
+            let lrtb = ["left","right","top","bottom"];
+            let myList = [];
+            let string = '';
+            shouldIskipAddingValue = true;
+
+            for (let i = stringCount; i < key.length; i++) {
+                let char = key.charAt(i).toLowerCase();
+                string += char;
+
+                if (lrtb.includes(string)) {
+                    myList.push(string);
+                    string = "";
+                }
+            }
+
+            for (let i = 0; i < myList.length; i++) {
+                attribute += `${firstString}-${myList[i]}: ${value};
+                `
+            }
+
+            
+        }
+
+        //Fixing Hyphonated Cases like backgroundColor to background-color;
         let correctKey = "";
         repeat(key,(char,i) => {
             if (getType(char,true).isUpperCase) {
@@ -1618,13 +1797,45 @@ function _css_generateAttributesString(obj) {
                 correctKey += char;
         })
         key = correctKey;
-
-        attribute += `${key}: ${value};
+        
+        //Add Attributes
+        if (!shouldIskipAddingValue)
+            attribute += `${key}: ${value};
         `
     })
 
     return attribute;
 }
+
+// Function to observe DOM mutations
+function observeDOMChanges(callback) {
+    // Create a new observer instance
+    const observer = new MutationObserver(mutationsList => {
+        // Loop through the mutations
+        mutationsList.forEach(mutation => {
+            // Check if nodes were added
+            if (mutation.type === 'childList') {
+                // Loop through the added nodes
+                mutation.addedNodes.forEach(node => {
+                    // Check if the added node is an element
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        // Call the callback function with the added element
+                        callback(node.tagName.toLowerCase(),node);
+                    }
+                });
+            }
+        });
+    });
+
+    // Start observing the DOM with specific configuration
+    observer.observe(document.body, { childList: true, subtree: true });
+}
+
+// Example usage
+observeDOMChanges((newElementTag,node) => {
+    _css_testNewElements(newElementTag,node);
+});
+
 
 
 // /https://getcssscan.com/css-box-shadow-examples
@@ -1633,5 +1844,5 @@ let scan_boxShadow_list = ["rgba(149, 157, 165, 0.2) 0px 8px 24px","rgba(100, 10
 includesString += ', C V1';
 
 
-sloglibrary(15.4,'Simple','JoeTheHobo');
+sloglibrary(15.5,'Simple','JoeTheHobo');
 slogIncludes(includesString)
